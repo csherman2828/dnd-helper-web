@@ -6,6 +6,8 @@ phases:
     commands:
       - npm install --omit=dev
   build:
+    runtime-versions:
+      nodejs: 20
     commands:
       - npm run build
 artifacts:
