@@ -68,7 +68,7 @@
     background: { name: 'Disavowed Noble' },
     alignment: 'Neutral Good',
     baseAbilityScores: {
-      strength: 10,
+      strength: 6,
       dexterity: 16,
       constitution: 14,
       intelligence: 12,
@@ -356,6 +356,7 @@
                   }}
                 </div>
               </div>
+              <div class="small-label">Saving Throws</div>
             </div>
             <div class="skills">
               <div
@@ -368,10 +369,26 @@
                   {{ `${skill.modifier > 0 ? '+' : ''}${skill.modifier}` }}
                 </div>
               </div>
+              <div class="small-label">Skills</div>
             </div>
           </div>
         </div>
-        <div class="resources"></div>
+        <div class="resources">
+          <div class="big-resources">
+            <div class="big-resource armor-class">
+              <div class="value">13</div>
+              <div class="label">Armor Class</div>
+            </div>
+            <div class="big-resource initiative">
+              <div class="value">13</div>
+              <div class="label">Initiative</div>
+            </div>
+            <div class="big-resource speed">
+              <div class="value">30 ft.</div>
+              <div class="label">Speed</div>
+            </div>
+          </div>
+        </div>
         <div class="details"></div>
       </div>
     </div>
@@ -387,7 +404,7 @@
     padding: 1rem;
     border: 5px white solid;
     border-radius: 15px;
-    max-width: 950px;
+    max-width: 1000px;
     margin: auto;
   }
 
@@ -399,7 +416,7 @@
     gap: 1rem;
     padding-bottom: calc(0.5rem - 1px);
     border-bottom: 2px solid white;
-    margin-bottom: calc(0.5rem - 1px);
+    margin-bottom: calc(0.5rem + 1px);
   }
 
   .character-sheet .header .name {
@@ -462,7 +479,17 @@
   .character-sheet .content .stats .derivatives {
     display: flex;
     flex-flow: column nowrap;
-    gap: 1rem;
+    gap: 0.5rem;
+  }
+
+  .character-sheet .content .stats .derivatives .inspiration,
+  .character-sheet .content .stats .derivatives .proficiency-bonus,
+  .character-sheet .content .stats .derivatives .skills,
+  .character-sheet .content .stats .derivatives .saving-throws {
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
   }
 
   .character-sheet .content .stats .derivatives .inspiration,
@@ -483,5 +510,48 @@
 
   .character-sheet .content .stats .derivatives .inspiration .v-checkbox {
     margin-right: -6px;
+    margin-top: -6px;
+    margin-bottom: -6px;
+  }
+
+  .big-resources {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .big-resource {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding: 0.5rem;
+    border: 1px white solid;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+  }
+
+  .big-resource .value,
+  .big-resource .label {
+    text-align: center;
+  }
+
+  .big-resource .value {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.25rem;
+    padding: 0.8rem;
+  }
+
+  .big-resource .label {
+    font-size: 0.8rem;
+    color: #ccc;
+  }
+
+  .small-label {
+    text-align: center;
+    color: #ccc;
+    font-size: 0.8rem;
   }
 </style>
