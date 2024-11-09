@@ -45,6 +45,7 @@
       charisma: number;
     };
     skillProficiencies: SkillLabel[];
+    savingThrowProficiencies: AbilityLabel[];
   }
 
   const baseCharacter: BaseCharacter = {
@@ -74,6 +75,7 @@
       wisdom: 10,
       charisma: 18,
     },
+    savingThrowProficiencies: ['dexterity', 'charisma'],
     skillProficiencies: [
       'acrobatics',
       'arcana',
@@ -132,6 +134,15 @@
     }
     getAbilityModifier(ability: AbilityLabel) {
       return Math.floor((this.getAbilityScore(ability) - 10) / 2);
+    }
+    getSavingThrow(abilityName: AbilityLabel) {
+      const proficiencyBonus = this.getProficiencyBonus();
+      const isProficient =
+        this.baseCharacter.savingThrowProficiencies.includes(abilityName);
+      return (
+        this.getAbilityModifier(abilityName) +
+        (isProficient ? proficiencyBonus : 0)
+      );
     }
     getSkillAbility(skill: SkillLabel) {
       switch (skill) {
@@ -229,6 +240,18 @@
     })),
   );
 
+  interface SavingThrow {
+    label: AbilityLabel;
+    modifier: number;
+  }
+
+  const savingThrows: Ref<SavingThrow[]> = ref(
+    abilityList.map(ability => ({
+      label: ability,
+      modifier: character.value.getSavingThrow(ability),
+    })),
+  );
+
   interface Skill {
     label: SkillLabel;
     modifier: number;
@@ -262,8 +285,8 @@
     })),
   );
 
-  const displaySkillLabel = (skillLabel: SkillLabel) => {
-    return skillLabel
+  const capitalize = (phrase: string) => {
+    return phrase
       .split(' ')
       .map(word =>
         word !== 'of' ? word[0].toUpperCase() + word.slice(1) : word,
@@ -320,13 +343,27 @@
               <div>Proficiency Bonus</div>
               <div>+{{ proficiencyBonus }}</div>
             </div>
+            <div class="saving-throws">
+              <div
+                v-for="savingThrow in savingThrows"
+                :key="savingThrow.label"
+                :class="`saving-throw ${savingThrow.label}-saving-throw`"
+              >
+                <div class="label">{{ capitalize(savingThrow.label) }}</div>
+                <div class="modifier">
+                  {{
+                    `${savingThrow.modifier > 0 ? '+' : ''}${savingThrow.modifier}`
+                  }}
+                </div>
+              </div>
+            </div>
             <div class="skills">
               <div
                 v-for="skill in skills"
                 :key="skill.label"
                 :class="`skill ${skill.label}`"
               >
-                <div class="label">{{ displaySkillLabel(skill.label) }}</div>
+                <div class="label">{{ capitalize(skill.label) }}</div>
                 <div class="modifier">
                   {{ `${skill.modifier > 0 ? '+' : ''}${skill.modifier}` }}
                 </div>
@@ -384,15 +421,17 @@
 
   .character-sheet .content .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: auto 1fr;
+    justify-content: center;
     gap: 1rem;
   }
 
   .character-sheet .content .stats .abilities {
     display: flex;
-    grid-column: span 1;
+    justify-content: center;
     flex-flow: column nowrap;
-    gap: 0.25rem;
+    gap: 1.5rem;
+    height: 100%;
   }
 
   .character-sheet .content .stats .abilities .ability {
@@ -403,6 +442,7 @@
     padding: 0.5rem;
     border: 1px solid white;
     border-radius: 10px;
+    width: 5rem;
   }
 
   .character-sheet .content .stats .abilities .ability .label {
@@ -418,7 +458,6 @@
   }
 
   .character-sheet .content .stats .derivatives {
-    grid-column: span 2;
     display: flex;
     flex-flow: column nowrap;
     gap: 1rem;
@@ -426,13 +465,15 @@
 
   .character-sheet .content .stats .derivatives .inspiration,
   .character-sheet .content .stats .derivatives .proficiency-bonus,
-  .character-sheet .content .stats .derivatives .skills .skill {
+  .character-sheet .content .stats .derivatives .skills .skill,
+  .character-sheet .content .stats .derivatives .saving-throws .saving-throw {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
   }
 
-  .character-sheet .content .stats .derivatives .skills {
+  .character-sheet .content .stats .derivatives .skills,
+  .character-sheet .content .stats .derivatives .saving-throws {
     display: flex;
     flex-flow: column nowrap;
     gap: 0.25rem;
