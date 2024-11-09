@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue';
 
+  const ignoreAuth = ref(true);
+
   const authenticated = ref(false);
   const username = ref('');
   const password = ref('');
@@ -33,7 +35,7 @@
       align-items: center;
       justify-content: center;
     "
-    v-if="!authenticated"
+    v-if="!authenticated && !ignoreAuth"
   >
     <v-form
       v-model="formReady"
