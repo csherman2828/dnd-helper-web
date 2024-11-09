@@ -395,9 +395,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
     width: 100%;
     gap: 1rem;
+    padding-bottom: calc(0.5rem - 1px);
+    border-bottom: 2px solid white;
+    margin-bottom: calc(0.5rem - 1px);
   }
 
   .character-sheet .header .name {
