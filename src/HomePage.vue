@@ -1,5 +1,18 @@
 <script lang="ts" setup>
   import { ref, computed, type Ref } from 'vue';
+  import CharacterSheetSection from './CharacterSheetSection.vue';
+
+  function roundDown(value: number) {
+    return Math.floor(value);
+  }
+
+  function getDiceAverage(sides: number) {
+    let sum = 0;
+    for (let i = 1; i <= sides; i++) {
+      sum += i;
+    }
+    return sum / sides;
+  }
 
   type AbilityLabel =
     | 'strength'
@@ -32,7 +45,7 @@
   interface BaseCharacter {
     name: string;
     playerName: string;
-    classes: { name: string; level: number }[];
+    classes: { name: string; level: number; hitDice: number }[];
     race: { name: string; subrace: string };
     background: { name: string };
     alignment: string;
@@ -46,6 +59,9 @@
     };
     skillProficiencies: SkillLabel[];
     savingThrowProficiencies: AbilityLabel[];
+    ideals: string[];
+    bonds: string[];
+    flaws: string[];
   }
 
   const baseCharacter: BaseCharacter = {
@@ -55,10 +71,12 @@
       {
         name: 'Sorcerer',
         level: 4,
+        hitDice: 6,
       },
       {
         name: 'Fighter',
         level: 1,
+        hitDice: 10,
       },
     ],
     race: {
@@ -83,6 +101,18 @@
       'insight',
       'perception',
       'persuasion',
+    ],
+    ideals: [
+      'I must prove that I am worthy of my family name.',
+      'I will do whatever it takes to protect my friends.',
+    ],
+    bonds: [
+      'I will not rest until my family is avenged.',
+      'I will do whatever it takes to protect my friends.',
+    ],
+    flaws: [
+      'I am quick to anger and slow to forgive.',
+      "I am haunted by the memory of my family's death.",
     ],
   };
 
@@ -183,6 +213,33 @@
     getSkillDisplay(skill: SkillLabel) {
       const modifier = this.getSkillModifier(skill);
       return `${modifier >= 0 ? '+' : ''}${modifier}`;
+    }
+    getMaxHitPoints() {
+      if (this.getLevel() === 1) {
+        return roundDown(
+          this.baseCharacter.classes[0].hitDice +
+            this.getAbilityModifier('constitution'),
+        );
+      }
+      return roundDown(
+        this.baseCharacter.classes.reduce((acc, characterClass) => {
+          return (
+            acc +
+            characterClass.level *
+              (getDiceAverage(characterClass.hitDice) +
+                this.getAbilityModifier('constitution'))
+          );
+        }, 0),
+      );
+    }
+    getIdeals() {
+      return this.baseCharacter.ideals;
+    }
+    getBonds() {
+      return this.baseCharacter.bonds;
+    }
+    getFlaws() {
+      return this.baseCharacter.flaws;
     }
   }
 
@@ -293,6 +350,11 @@
       )
       .join(' ');
   };
+
+  const maximumHitPoints = computed(() => character.value.getMaxHitPoints());
+  const ideals = computed(() => character.value.getIdeals());
+  const bonds = computed(() => character.value.getBonds());
+  const flaws = computed(() => character.value.getFlaws());
 </script>
 
 <template>
@@ -310,7 +372,7 @@
         </div>
       </div>
       <div class="content">
-        <div class="stats">
+        <div class="left-column">
           <div class="abilities">
             <div
               v-for="ability in abilities"
@@ -329,7 +391,7 @@
             </div>
           </div>
           <div class="derivatives">
-            <div class="inspiration">
+            <CharacterSheetSection class="inspiration">
               <div>Inspiration</div>
               <v-checkbox
                 :value="hasInspiration"
@@ -338,12 +400,12 @@
                 hide-spin-buttons
                 density="compact"
               ></v-checkbox>
-            </div>
-            <div class="proficiency-bonus">
+            </CharacterSheetSection>
+            <CharacterSheetSection class="proficiency-bonus">
               <div>Proficiency Bonus</div>
               <div>+{{ proficiencyBonus }}</div>
-            </div>
-            <div class="saving-throws">
+            </CharacterSheetSection>
+            <CharacterSheetSection title="Saving Throws" class="saving-throws">
               <div
                 v-for="savingThrow in savingThrows"
                 :key="savingThrow.label"
@@ -357,8 +419,8 @@
                 </div>
               </div>
               <div class="small-label">Saving Throws</div>
-            </div>
-            <div class="skills">
+            </CharacterSheetSection>
+            <CharacterSheetSection title="Skills" class="skills">
               <div
                 v-for="skill in skills"
                 :key="skill.label"
@@ -369,27 +431,74 @@
                   {{ `${skill.modifier > 0 ? '+' : ''}${skill.modifier}` }}
                 </div>
               </div>
-              <div class="small-label">Skills</div>
-            </div>
+            </CharacterSheetSection>
           </div>
         </div>
-        <div class="resources">
+        <div class="center-column">
           <div class="big-resources">
-            <div class="big-resource armor-class">
-              <div class="value">13</div>
-              <div class="label">Armor Class</div>
-            </div>
-            <div class="big-resource initiative">
-              <div class="value">13</div>
-              <div class="label">Initiative</div>
-            </div>
-            <div class="big-resource speed">
-              <div class="value">30 ft.</div>
-              <div class="label">Speed</div>
-            </div>
+            <CharacterSheetSection
+              title="Armor Class"
+              class="big-resource armor-class"
+            >
+              13
+            </CharacterSheetSection>
+            <CharacterSheetSection
+              title="Initiative"
+              class="big-resource initiative"
+            >
+              +4
+            </CharacterSheetSection>
+            <CharacterSheetSection title="Speed" class="big-resource speed">
+              30 ft.
+            </CharacterSheetSection>
+          </div>
+          <CharacterSheetSection title="Current Hitpoints">
+            {{ maximumHitPoints }}
+          </CharacterSheetSection>
+          <CharacterSheetSection
+            title="Temporary Hitpoints"
+          ></CharacterSheetSection>
+          <div>
+            <CharacterSheetSection title="Hit Dice"></CharacterSheetSection>
+            <CharacterSheetSection title="Death Saves"></CharacterSheetSection>
+          </div>
+          <CharacterSheetSection
+            title="Attacks &amp; Spellcasting"
+          ></CharacterSheetSection>
+          <CharacterSheetSection title="Equipment"></CharacterSheetSection>
+        </div>
+        <div class="right-column">
+          <div class="personality-traits">
+            <CharacterSheetSection
+              title="Ideals"
+              class="personality-trait ideals"
+            >
+              <div v-for="ideal of ideals" :key="ideal">
+                {{ ideal }}
+              </div>
+            </CharacterSheetSection>
+            <CharacterSheetSection
+              title="Ideals"
+              class="personality-trait ideals"
+            >
+              <div v-for="bond of bonds" :key="bond">
+                {{ bond }}
+              </div>
+            </CharacterSheetSection>
+            <CharacterSheetSection
+              title="Ideals"
+              class="personality-trait ideals"
+            >
+              <div v-for="flaw of flaws" :key="flaw">
+                {{ flaw }}
+              </div>
+            </CharacterSheetSection>
+            <CharacterSheetSection
+              title="Features &amp; Traits"
+              class="personality-trait ideals"
+            ></CharacterSheetSection>
           </div>
         </div>
-        <div class="details"></div>
       </div>
     </div>
   </div>
@@ -405,10 +514,11 @@
     border: 5px white solid;
     border-radius: 15px;
     max-width: 1000px;
+    min-width: 1000px;
     margin: auto;
   }
 
-  .character-sheet .header {
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -419,33 +529,33 @@
     margin-bottom: calc(0.5rem + 1px);
   }
 
-  .character-sheet .header .name {
+  .header .name {
     flex: 2;
     font-size: 1.5rem;
     font-weight: bold;
   }
 
-  .character-sheet .header .general-info {
+  .general-info {
     flex: 5;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
 
-  .character-sheet .content {
+  .content {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
 
-  .character-sheet .content .stats {
+  .left-column {
     display: grid;
     grid-template-columns: auto 1fr;
     justify-content: center;
     gap: 1rem;
   }
 
-  .character-sheet .content .stats .abilities {
+  .abilities {
     display: flex;
     justify-content: center;
     flex-flow: column nowrap;
@@ -453,7 +563,7 @@
     height: 100%;
   }
 
-  .character-sheet .content .stats .abilities .ability {
+  .ability {
     display: flex;
     flex-flow: column nowrap;
     justify-content: center;
@@ -464,51 +574,43 @@
     width: 5rem;
   }
 
-  .character-sheet .content .stats .abilities .ability .label {
+  .ability .label {
     font-weight: bold;
   }
 
-  .character-sheet .content .stats .abilities .ability .score {
+  .ability .score {
     font-size: 0.75rem;
   }
 
-  .character-sheet .content .stats .abilities .ability .modifier {
+  .ability .modifier {
     font-size: 1.5rem;
   }
 
-  .character-sheet .content .stats .derivatives {
+  .center-column,
+  .derivatives,
+  .personality-traits {
     display: flex;
     flex-flow: column nowrap;
     gap: 0.5rem;
   }
 
-  .character-sheet .content .stats .derivatives .inspiration,
-  .character-sheet .content .stats .derivatives .proficiency-bonus,
-  .character-sheet .content .stats .derivatives .skills,
-  .character-sheet .content .stats .derivatives .saving-throws {
-    border: 1px solid white;
-    border-radius: 5px;
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .character-sheet .content .stats .derivatives .inspiration,
-  .character-sheet .content .stats .derivatives .proficiency-bonus,
-  .character-sheet .content .stats .derivatives .skills .skill,
-  .character-sheet .content .stats .derivatives .saving-throws .saving-throw {
+  .inspiration,
+  .proficiency-bonus,
+  .skill,
+  .saving-throw {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
   }
 
-  .character-sheet .content .stats .derivatives .skills,
-  .character-sheet .content .stats .derivatives .saving-throws {
+  .skills,
+  .saving-throws {
     display: flex;
     flex-flow: column nowrap;
     gap: 0.25rem;
   }
 
-  .character-sheet .content .stats .derivatives .inspiration .v-checkbox {
+  .inspiration .v-checkbox {
     margin-right: -6px;
     margin-top: -6px;
     margin-bottom: -6px;
@@ -547,11 +649,5 @@
   .big-resource .label {
     font-size: 0.8rem;
     color: #ccc;
-  }
-
-  .small-label {
-    text-align: center;
-    color: #ccc;
-    font-size: 0.8rem;
   }
 </style>
