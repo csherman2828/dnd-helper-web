@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { ref, computed, type Ref } from 'vue';
+  import CharacterSheetPage from './CharacterSheetPage.vue';
   import CharacterSheetSection from './CharacterSheetSection.vue';
 
   function roundDown(value: number) {
@@ -360,146 +361,155 @@
 <template>
   <div class="page">
     <div class="character-sheet">
-      <div class="header">
-        <div class="name">{{ characterName }}</div>
-        <div class="general-info">
-          <div class="class-and-level">{{ classAndLevel }}</div>
-          <div class="background">{{ background }}</div>
-          <div class="player-name">{{ playerName }}</div>
-          <div class="race">{{ race }}</div>
-          <div class="alignment">{{ alignment }}</div>
-          <div class="level">Level {{ level }} (Milestone)</div>
+      <CharacterSheetPage class="character-sheet">
+        <div class="header">
+          <div class="name">{{ characterName }}</div>
+          <div class="general-info">
+            <div class="class-and-level">{{ classAndLevel }}</div>
+            <div class="background">{{ background }}</div>
+            <div class="player-name">{{ playerName }}</div>
+            <div class="race">{{ race }}</div>
+            <div class="alignment">{{ alignment }}</div>
+            <div class="level">Level {{ level }} (Milestone)</div>
+          </div>
         </div>
-      </div>
-      <div class="content">
-        <div class="left-column">
-          <div class="abilities">
-            <div
-              v-for="ability in abilities"
-              :key="ability.label"
-              :class="`ability ${ability.label}`"
-            >
-              <div class="label">
-                {{ ability.label.slice(0, 3).toUpperCase() }}
-              </div>
-              <div class="modifier">
-                {{ `${ability.modifier > 0 ? '+' : ''}${ability.modifier}` }}
-              </div>
-              <div class="score">
-                {{ ability.score }}
+        <div class="content">
+          <div class="left-column">
+            <div class="abilities">
+              <div
+                v-for="ability in abilities"
+                :key="ability.label"
+                :class="`ability ${ability.label}`"
+              >
+                <div class="label">
+                  {{ ability.label.slice(0, 3).toUpperCase() }}
+                </div>
+                <div class="modifier">
+                  {{ `${ability.modifier > 0 ? '+' : ''}${ability.modifier}` }}
+                </div>
+                <div class="score">
+                  {{ ability.score }}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="derivatives">
-            <CharacterSheetSection class="inspiration">
-              <div>Inspiration</div>
-              <v-checkbox
-                :value="hasInspiration"
-                @input="hasInspiration = !hasInspiration"
-                hide-details
-                hide-spin-buttons
-                density="compact"
-              ></v-checkbox>
-            </CharacterSheetSection>
-            <CharacterSheetSection class="proficiency-bonus">
-              <div>Proficiency Bonus</div>
-              <div>+{{ proficiencyBonus }}</div>
-            </CharacterSheetSection>
-            <CharacterSheetSection title="Saving Throws" class="saving-throws">
-              <div
-                v-for="savingThrow in savingThrows"
-                :key="savingThrow.label"
-                :class="`saving-throw ${savingThrow.label}-saving-throw`"
+            <div class="derivatives">
+              <CharacterSheetSection class="inspiration">
+                <div>Inspiration</div>
+                <v-checkbox
+                  :value="hasInspiration"
+                  @input="hasInspiration = !hasInspiration"
+                  hide-details
+                  hide-spin-buttons
+                  density="compact"
+                ></v-checkbox>
+              </CharacterSheetSection>
+              <CharacterSheetSection class="proficiency-bonus">
+                <div>Proficiency Bonus</div>
+                <div>+{{ proficiencyBonus }}</div>
+              </CharacterSheetSection>
+              <CharacterSheetSection
+                title="Saving Throws"
+                class="saving-throws"
               >
-                <div class="label">{{ capitalize(savingThrow.label) }}</div>
-                <div class="modifier">
-                  {{
-                    `${savingThrow.modifier > 0 ? '+' : ''}${savingThrow.modifier}`
-                  }}
+                <div
+                  v-for="savingThrow in savingThrows"
+                  :key="savingThrow.label"
+                  :class="`saving-throw ${savingThrow.label}-saving-throw`"
+                >
+                  <div class="label">{{ capitalize(savingThrow.label) }}</div>
+                  <div class="modifier">
+                    {{
+                      `${savingThrow.modifier > 0 ? '+' : ''}${savingThrow.modifier}`
+                    }}
+                  </div>
                 </div>
-              </div>
-              <div class="small-label">Saving Throws</div>
-            </CharacterSheetSection>
-            <CharacterSheetSection title="Skills" class="skills">
-              <div
-                v-for="skill in skills"
-                :key="skill.label"
-                :class="`skill ${skill.label}`"
+                <div class="small-label">Saving Throws</div>
+              </CharacterSheetSection>
+              <CharacterSheetSection title="Skills" class="skills">
+                <div
+                  v-for="skill in skills"
+                  :key="skill.label"
+                  :class="`skill ${skill.label}`"
+                >
+                  <div class="label">{{ capitalize(skill.label) }}</div>
+                  <div class="modifier">
+                    {{ `${skill.modifier > 0 ? '+' : ''}${skill.modifier}` }}
+                  </div>
+                </div>
+              </CharacterSheetSection>
+            </div>
+          </div>
+          <div class="center-column">
+            <div class="big-resources">
+              <CharacterSheetSection
+                title="Armor Class"
+                class="big-resource armor-class"
               >
-                <div class="label">{{ capitalize(skill.label) }}</div>
-                <div class="modifier">
-                  {{ `${skill.modifier > 0 ? '+' : ''}${skill.modifier}` }}
-                </div>
-              </div>
-            </CharacterSheetSection>
-          </div>
-        </div>
-        <div class="center-column">
-          <div class="big-resources">
-            <CharacterSheetSection
-              title="Armor Class"
-              class="big-resource armor-class"
-            >
-              13
-            </CharacterSheetSection>
-            <CharacterSheetSection
-              title="Initiative"
-              class="big-resource initiative"
-            >
-              +4
-            </CharacterSheetSection>
-            <CharacterSheetSection title="Speed" class="big-resource speed">
-              30 ft.
-            </CharacterSheetSection>
-          </div>
-          <CharacterSheetSection title="Current Hitpoints">
-            {{ maximumHitPoints }}
-          </CharacterSheetSection>
-          <CharacterSheetSection
-            title="Temporary Hitpoints"
-          ></CharacterSheetSection>
-          <div>
-            <CharacterSheetSection title="Hit Dice"></CharacterSheetSection>
-            <CharacterSheetSection title="Death Saves"></CharacterSheetSection>
-          </div>
-          <CharacterSheetSection
-            title="Attacks &amp; Spellcasting"
-          ></CharacterSheetSection>
-          <CharacterSheetSection title="Equipment"></CharacterSheetSection>
-        </div>
-        <div class="right-column">
-          <div class="personality-traits">
-            <CharacterSheetSection
-              title="Ideals"
-              class="personality-trait ideals"
-            >
-              <div v-for="ideal of ideals" :key="ideal">
-                {{ ideal }}
-              </div>
+                13
+              </CharacterSheetSection>
+              <CharacterSheetSection
+                title="Initiative"
+                class="big-resource initiative"
+              >
+                +4
+              </CharacterSheetSection>
+              <CharacterSheetSection title="Speed" class="big-resource speed">
+                30 ft.
+              </CharacterSheetSection>
+            </div>
+            <CharacterSheetSection title="Current Hitpoints">
+              {{ maximumHitPoints }}
             </CharacterSheetSection>
             <CharacterSheetSection
-              title="Ideals"
-              class="personality-trait ideals"
-            >
-              <div v-for="bond of bonds" :key="bond">
-                {{ bond }}
-              </div>
-            </CharacterSheetSection>
-            <CharacterSheetSection
-              title="Ideals"
-              class="personality-trait ideals"
-            >
-              <div v-for="flaw of flaws" :key="flaw">
-                {{ flaw }}
-              </div>
-            </CharacterSheetSection>
-            <CharacterSheetSection
-              title="Features &amp; Traits"
-              class="personality-trait ideals"
+              title="Temporary Hitpoints"
             ></CharacterSheetSection>
+            <div>
+              <CharacterSheetSection title="Hit Dice"></CharacterSheetSection>
+              <CharacterSheetSection
+                title="Death Saves"
+              ></CharacterSheetSection>
+            </div>
+            <CharacterSheetSection
+              title="Attacks &amp; Spellcasting"
+            ></CharacterSheetSection>
+            <CharacterSheetSection title="Equipment"></CharacterSheetSection>
+          </div>
+          <div class="right-column">
+            <div class="personality-traits">
+              <CharacterSheetSection
+                title="Ideals"
+                class="personality-trait ideals"
+              >
+                <div v-for="ideal of ideals" :key="ideal">
+                  {{ ideal }}
+                </div>
+              </CharacterSheetSection>
+              <CharacterSheetSection
+                title="Ideals"
+                class="personality-trait ideals"
+              >
+                <div v-for="bond of bonds" :key="bond">
+                  {{ bond }}
+                </div>
+              </CharacterSheetSection>
+              <CharacterSheetSection
+                title="Ideals"
+                class="personality-trait ideals"
+              >
+                <div v-for="flaw of flaws" :key="flaw">
+                  {{ flaw }}
+                </div>
+              </CharacterSheetSection>
+              <CharacterSheetSection
+                title="Features &amp; Traits"
+                class="personality-trait ideals"
+              ></CharacterSheetSection>
+            </div>
           </div>
         </div>
-      </div>
+      </CharacterSheetPage>
+      <CharacterSheetPage></CharacterSheetPage>
+      <CharacterSheetPage></CharacterSheetPage>
     </div>
   </div>
 </template>
@@ -510,12 +520,9 @@
   }
 
   .character-sheet {
-    padding: 1rem;
-    border: 5px white solid;
-    border-radius: 15px;
-    max-width: 1000px;
-    min-width: 1000px;
-    margin: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    gap: 1rem;
   }
 
   .header {
