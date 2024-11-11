@@ -3,249 +3,30 @@
   import CharacterSheetPage from './CharacterSheetPage.vue';
   import CharacterSheetColumn from './CharacterSheetColumn.vue';
   import CharacterSheetSection from './CharacterSheetSection.vue';
+  import { Character, type AbilityLabel, type SkillLabel } from './Character';
 
-  function roundDown(value: number) {
-    return Math.floor(value);
-  }
-
-  function getDiceAverage(sides: number) {
-    let sum = 0;
-    for (let i = 1; i <= sides; i++) {
-      sum += i;
-    }
-    return sum / sides;
-  }
-
-  type AbilityLabel =
-    | 'strength'
-    | 'dexterity'
-    | 'constitution'
-    | 'intelligence'
-    | 'wisdom'
-    | 'charisma';
-
-  type SkillLabel =
-    | 'acrobatics'
-    | 'animal handling'
-    | 'arcana'
-    | 'athletics'
-    | 'deception'
-    | 'history'
-    | 'insight'
-    | 'intimidation'
-    | 'investigation'
-    | 'medicine'
-    | 'nature'
-    | 'perception'
-    | 'performance'
-    | 'persuasion'
-    | 'religion'
-    | 'sleight of hand'
-    | 'stealth'
-    | 'survival';
-
-  interface BaseCharacter {
-    name: string;
-    playerName: string;
-    classes: { name: string; level: number; hitDice: number }[];
-    race: { name: string; subrace: string };
-    background: { name: string };
-    alignment: string;
-    baseAbilityScores: {
-      strength: number;
-      dexterity: number;
-      constitution: number;
-      intelligence: number;
-      wisdom: number;
-      charisma: number;
-    };
-    skillProficiencies: SkillLabel[];
-    savingThrowProficiencies: AbilityLabel[];
-    ideals: string[];
-    bonds: string[];
-    flaws: string[];
-  }
-
-  const baseCharacter: BaseCharacter = {
-    name: 'Varis Skyshadow',
-    playerName: 'Chris Sherman',
-    classes: [
-      {
-        name: 'Sorcerer',
-        level: 4,
-        hitDice: 6,
-      },
-      {
-        name: 'Fighter',
-        level: 1,
-        hitDice: 10,
-      },
-    ],
-    race: {
-      name: 'Elf',
-      subrace: 'High Elf',
+  const { character: characterProp } = defineProps({
+    character: {
+      type: Object as () => Character,
+      required: true,
     },
-    background: { name: 'Disavowed Noble' },
-    alignment: 'Neutral Good',
-    baseAbilityScores: {
-      strength: 6,
-      dexterity: 16,
-      constitution: 14,
-      intelligence: 12,
-      wisdom: 10,
-      charisma: 18,
-    },
-    savingThrowProficiencies: ['dexterity', 'charisma'],
-    skillProficiencies: [
-      'acrobatics',
-      'arcana',
-      'deception',
-      'insight',
-      'perception',
-      'persuasion',
-    ],
-    ideals: [
-      'I must prove that I am worthy of my family name.',
-      'I will do whatever it takes to protect my friends.',
-    ],
-    bonds: [
-      'I will not rest until my family is avenged.',
-      'I will do whatever it takes to protect my friends.',
-    ],
-    flaws: [
-      'I am quick to anger and slow to forgive.',
-      "I am haunted by the memory of my family's death.",
-    ],
-  };
+  });
 
-  class Character {
-    private baseCharacter: BaseCharacter;
-    private isInspired: boolean;
-    constructor(baseCharacter: BaseCharacter) {
-      this.baseCharacter = baseCharacter;
-      this.isInspired = false;
-    }
-    getName() {
-      return this.baseCharacter.name;
-    }
-    getClasses() {
-      return this.baseCharacter.classes;
-    }
-    getBackground() {
-      return this.baseCharacter.background.name;
-    }
-    getPlayerName() {
-      return this.baseCharacter.playerName;
-    }
-    getRace() {
-      return `${this.baseCharacter.race.name} (${this.baseCharacter.race.subrace})`;
-    }
-    getAlignment() {
-      return this.baseCharacter.alignment;
-    }
-    getLevel() {
-      return this.baseCharacter.classes.reduce(
-        (acc, characterClass) => acc + characterClass.level,
-        0,
-      );
-    }
-    hasInspiration() {
-      return this.isInspired;
-    }
-    inspire() {
-      this.isInspired = true;
-    }
-    useInspiration() {
-      this.isInspired = false;
-    }
-    getProficiencyBonus() {
-      return Math.ceil(this.getLevel() / 4) + 1;
-    }
-    getAbilityScore(ability: AbilityLabel) {
-      return this.baseCharacter.baseAbilityScores[ability];
-    }
-    getAbilityModifier(ability: AbilityLabel) {
-      return Math.floor((this.getAbilityScore(ability) - 10) / 2);
-    }
-    getSavingThrow(abilityName: AbilityLabel) {
-      const proficiencyBonus = this.getProficiencyBonus();
-      const isProficient =
-        this.baseCharacter.savingThrowProficiencies.includes(abilityName);
-      return (
-        this.getAbilityModifier(abilityName) +
-        (isProficient ? proficiencyBonus : 0)
-      );
-    }
-    getSkillAbility(skill: SkillLabel) {
-      switch (skill) {
-        case 'acrobatics':
-        case 'sleight of hand':
-        case 'stealth':
-          return 'dexterity';
-        case 'animal handling':
-        case 'insight':
-        case 'medicine':
-        case 'perception':
-        case 'survival':
-          return 'wisdom';
-        case 'arcana':
-        case 'history':
-        case 'investigation':
-        case 'nature':
-        case 'religion':
-          return 'intelligence';
-        case 'athletics':
-          return 'strength';
-        case 'deception':
-        case 'intimidation':
-        case 'performance':
-        case 'persuasion':
-          return 'charisma';
-      }
-    }
-    getSkillModifier(skill: SkillLabel) {
-      const ability = this.getSkillAbility(skill);
-      const proficiencyBonus = this.getProficiencyBonus();
-      const isProficient =
-        this.baseCharacter.skillProficiencies.includes(skill);
-      return (
-        this.getAbilityModifier(ability) + (isProficient ? proficiencyBonus : 0)
-      );
-    }
-    getSkillDisplay(skill: SkillLabel) {
-      const modifier = this.getSkillModifier(skill);
-      return `${modifier >= 0 ? '+' : ''}${modifier}`;
-    }
-    getMaxHitPoints() {
-      if (this.getLevel() === 1) {
-        return roundDown(
-          this.baseCharacter.classes[0].hitDice +
-            this.getAbilityModifier('constitution'),
-        );
-      }
-      return roundDown(
-        this.baseCharacter.classes.reduce((acc, characterClass) => {
-          return (
-            acc +
-            characterClass.level *
-              (getDiceAverage(characterClass.hitDice) +
-                this.getAbilityModifier('constitution'))
-          );
-        }, 0),
-      );
-    }
-    getIdeals() {
-      return this.baseCharacter.ideals;
-    }
-    getBonds() {
-      return this.baseCharacter.bonds;
-    }
-    getFlaws() {
-      return this.baseCharacter.flaws;
-    }
+  // need to typecast because typescript forgets variables are private
+  const character: Ref<Character> = ref(characterProp) as Ref<Character>;
+
+  function displayWithSign(value: number) {
+    return `${value > 0 ? '+' : ''}${value}`;
   }
 
-  const character = ref(new Character(baseCharacter));
+  function capitalize(phrase: string) {
+    return phrase
+      .split(' ')
+      .map(word =>
+        word !== 'of' ? word[0].toUpperCase() + word.slice(1) : word,
+      )
+      .join(' ');
+  }
 
   const characterName = computed(() => character.value.getName());
   const classAndLevel = computed(() =>
@@ -287,14 +68,14 @@
 
   interface Ability {
     label: string;
-    modifier: number;
+    modifier: string;
     score: number;
   }
 
   const abilities: Ref<Ability[]> = ref(
     abilityList.map(ability => ({
-      label: ability[0].toUpperCase() + ability.slice(1),
-      modifier: character.value.getAbilityModifier(ability),
+      label: ability.slice(0, 3).toUpperCase(),
+      modifier: displayWithSign(character.value.getAbilityModifier(ability)),
       score: character.value.getAbilityScore(ability),
     })),
   );
@@ -344,19 +125,26 @@
     })),
   );
 
-  const capitalize = (phrase: string) => {
-    return phrase
-      .split(' ')
-      .map(word =>
-        word !== 'of' ? word[0].toUpperCase() + word.slice(1) : word,
-      )
-      .join(' ');
-  };
+  const languages = computed(() => character.value.getLanguages().join(', '));
+
+  const armorClass = computed(() => character.value.getArmorClass());
+  const initiativeModifier = computed(() =>
+    displayWithSign(character.value.getAbilityModifier('dexterity')),
+  );
+  const speed = computed(() => character.value.getSpeed());
 
   const maximumHitPoints = computed(() => character.value.getMaxHitPoints());
+  const currentHitPoints = computed(() =>
+    character.value.getCurrentHitPoints(),
+  );
+  const temporaryHitPoints = computed(() =>
+    character.value.getTemporaryHitPoints(),
+  );
+  const maxHitDice = computed(() => character.value.getMaxHitDice());
   const ideals = computed(() => character.value.getIdeals());
   const bonds = computed(() => character.value.getBonds());
   const flaws = computed(() => character.value.getFlaws());
+  const racialTraits = computed(() => character.value.getRacialTraits());
 </script>
 
 <template>
@@ -384,12 +172,10 @@
                   :class="`ability ${ability.label}`"
                 >
                   <div class="label">
-                    {{ ability.label.slice(0, 3).toUpperCase() }}
+                    {{ ability.label }}
                   </div>
                   <div class="modifier">
-                    {{
-                      `${ability.modifier > 0 ? '+' : ''}${ability.modifier}`
-                    }}
+                    {{ ability.modifier }}
                   </div>
                   <div class="score">
                     {{ ability.score }}
@@ -447,36 +233,56 @@
               <div>Passive Wisdom (Perception)</div>
               <div>+{{ proficiencyBonus }}</div>
             </CharacterSheetSection>
-            <CharacterSheetSection
-              title="Other Proficiencies &amp; Languages"
-            ></CharacterSheetSection>
+            <CharacterSheetSection title="Other Proficiencies &amp; Languages">
+              Languages: {{ languages }}
+            </CharacterSheetSection>
           </CharacterSheetColumn>
           <CharacterSheetColumn class="center-column">
-            <div class="big-resources">
+            <div class="character-sheet-row big-resources">
               <CharacterSheetSection
                 title="Armor Class"
                 class="big-resource armor-class"
               >
-                13
+                {{ armorClass }}
               </CharacterSheetSection>
               <CharacterSheetSection
                 title="Initiative"
-                class="big-resource initiative"
+                class="big-resource initiative-bonus"
               >
-                +4
+                {{ initiativeModifier }}
               </CharacterSheetSection>
               <CharacterSheetSection title="Speed" class="big-resource speed">
-                30 ft.
+                {{ speed }}
               </CharacterSheetSection>
             </div>
-            <CharacterSheetSection title="Current Hitpoints">
-              {{ maximumHitPoints }}
+            <CharacterSheetSection
+              title="Current Hitpoints"
+              class="big-resource hitpoints"
+            >
+              {{ currentHitPoints }} / {{ maximumHitPoints }}
             </CharacterSheetSection>
             <CharacterSheetSection
               title="Temporary Hitpoints"
-            ></CharacterSheetSection>
-            <div>
-              <CharacterSheetSection title="Hit Dice"></CharacterSheetSection>
+              class="big-resource temporary-hitpoint"
+            >
+              {{ temporaryHitPoints }}
+            </CharacterSheetSection>
+            <div
+              class="character-sheet-row"
+              style="grid-template-columns: repeat(2, 1fr)"
+            >
+              <CharacterSheetSection
+                title="Hit Dice"
+                style="
+                  text-align: center;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  font-size: 1.5rem;
+                "
+              >
+                {{ maxHitDice }}
+              </CharacterSheetSection>
               <CharacterSheetSection
                 title="Death Saves"
               ></CharacterSheetSection>
@@ -489,23 +295,23 @@
           <CharacterSheetColumn class="right-column">
             <CharacterSheetSection
               title="Ideals"
-              class="personality-trait ideals"
+              class="ideals personality-trait"
             >
               <div v-for="ideal of ideals" :key="ideal">
                 {{ ideal }}
               </div>
             </CharacterSheetSection>
             <CharacterSheetSection
-              title="Ideals"
-              class="personality-trait ideals"
+              title="Bonds"
+              class="bonds personality-trait"
             >
               <div v-for="bond of bonds" :key="bond">
                 {{ bond }}
               </div>
             </CharacterSheetSection>
             <CharacterSheetSection
-              title="Ideals"
-              class="personality-trait ideals"
+              title="Flaws"
+              class="flaws personality-trait"
             >
               <div v-for="flaw of flaws" :key="flaw">
                 {{ flaw }}
@@ -513,8 +319,15 @@
             </CharacterSheetSection>
             <CharacterSheetSection
               title="Features &amp; Traits"
-              class="personality-trait ideals"
-            ></CharacterSheetSection>
+              style="display: flex; flex-flow: column nowrap; gap: 0.5rem"
+            >
+              <div v-for="racialTrait in racialTraits" :key="racialTrait.name">
+                <div style="font-weight: bold">
+                  {{ racialTrait.name }}
+                </div>
+                <div>{{ racialTrait.description }}</div>
+              </div>
+            </CharacterSheetSection>
           </CharacterSheetColumn>
         </div>
       </CharacterSheetPage>
@@ -554,9 +367,9 @@
         <div class="header">
           <div class="spellcasting-class">Sorcerer</div>
           <div class="general-info">
-            <div class="big-resources">
+            <div class="character-sheet-row">
               <CharacterSheetSection
-                title="Armor Class"
+                title="Spellcasting Ability"
                 class="big-resource armor-class"
               >
                 13
@@ -648,10 +461,10 @@
     flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.25rem;
     border: 1px solid white;
     border-radius: 10px;
-    width: 5rem;
+    width: 6rem;
   }
 
   .ability .label {
@@ -659,11 +472,11 @@
   }
 
   .ability .score {
-    font-size: 0.75rem;
+    font-size: 1rem;
   }
 
   .ability .modifier {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .inspiration,
@@ -688,38 +501,18 @@
     margin-bottom: -6px;
   }
 
-  .big-resources {
+  .character-sheet-row {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    justify-content: stretch;
+    gap: 0.5rem;
   }
 
   .big-resource {
-    display: grid;
-    grid-template-rows: 1fr auto;
     padding: 0.5rem;
-    border: 1px white solid;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-  }
-
-  .big-resource .value,
-  .big-resource .label {
+    width: 100%;
     text-align: center;
-  }
-
-  .big-resource .value {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.25rem;
-    padding: 0.8rem;
-  }
-
-  .big-resource .label {
-    font-size: 0.8rem;
-    color: #ccc;
+    font-size: 2rem;
   }
 </style>
