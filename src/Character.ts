@@ -44,7 +44,10 @@ class Character {
     return this.characterBase.playerName;
   }
   getRace() {
-    return `${this.characterBase.race.name} (${this.characterBase.race.subrace})`;
+    return this.characterBase.race.name;
+  }
+  getSubrace() {
+    return this.characterBase.race.subrace.name;
   }
   getAlignment() {
     return this.characterBase.alignment;

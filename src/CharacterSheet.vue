@@ -38,6 +38,7 @@
   const background = computed(() => character.value.getBackground());
   const playerName = computed(() => character.value.getPlayerName());
   const race = computed(() => character.value.getRace());
+  const subrace = computed(() => character.value.getSubrace());
   const alignment = computed(() => character.value.getAlignment());
   const level = computed(() => character.value.getLevel());
   const hasInspiration = computed(() => ({
@@ -157,7 +158,7 @@
             <div class="class-and-level">{{ classAndLevel }}</div>
             <div class="background">{{ background }}</div>
             <div class="player-name">{{ playerName }}</div>
-            <div class="race">{{ race }}</div>
+            <div class="race">{{ race }} ({{ subrace }})</div>
             <div class="alignment">{{ alignment }}</div>
             <div class="level">Level {{ level }} (Milestone)</div>
           </div>
