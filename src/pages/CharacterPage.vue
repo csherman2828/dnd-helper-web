@@ -2,9 +2,9 @@
   import { onMounted, ref, type Ref } from 'vue';
   import { useRoute } from 'vue-router';
 
-  import { Character } from './Character';
+  import { Character } from '../Character';
   import CharacterSheet from './CharacterSheet.vue';
-  import fetchCharacterBase from './fetchCharacterBase';
+  import fetchCharacterBase from '../fetchCharacterBase';
 
   const route = useRoute();
 
