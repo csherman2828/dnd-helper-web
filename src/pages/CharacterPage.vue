@@ -14,6 +14,7 @@
   onMounted(async () => {
     const characterBase = await fetchCharacterBase(characterId);
     character.value = new Character(characterBase);
+    document.title = character.value.getName();
   });
 </script>
 

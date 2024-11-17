@@ -1,5 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
 
   const ignoreAuth = ref(true);
 
@@ -22,6 +25,10 @@
   }
 
   const rules = [(value: string) => !!value || 'Required.'];
+
+  function handleSiteNameClicked() {
+    router.push({ name: 'home' });
+  }
 </script>
 
 <template>
@@ -65,7 +72,9 @@
   </div>
   <v-layout class="authenticated-view" v-else>
     <v-app-bar>
-      <v-toolbar-title>Shermaniac VTT</v-toolbar-title>
+      <v-toolbar-title class="site-name" @click="handleSiteNameClicked">
+        Shermaniac VTT
+      </v-toolbar-title>
       <v-btn @click="logout">Logout</v-btn>
     </v-app-bar>
     <v-main>
@@ -74,4 +83,8 @@
   </v-layout>
 </template>
 
-<style scoped></style>
+<style scoped>
+  .site-name {
+    cursor: pointer;
+  }
+</style>
