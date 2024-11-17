@@ -1,4 +1,5 @@
 interface CharacterListing {
+  id: string;
   name: string;
 }
 

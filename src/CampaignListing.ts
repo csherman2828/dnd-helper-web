@@ -1,4 +1,5 @@
 interface CampaignListing {
+  id: string;
   name: string;
 }
 

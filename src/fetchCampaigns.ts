@@ -5,15 +5,19 @@ async function fetchCampaigns(userId: string): Promise<CampaignListing[]> {
 
   return [
     {
+      id: '1',
       name: 'Blue Campaign',
     },
     {
+      id: '2',
       name: 'Gold Campaign',
     },
     {
+      id: '3',
       name: 'Joliet Campaign',
     },
     {
+      id: '4',
       name: "Jordan's Campaign",
     },
   ];

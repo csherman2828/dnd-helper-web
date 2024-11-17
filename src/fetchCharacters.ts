@@ -4,7 +4,20 @@ async function fetchCharacters(userId: string): Promise<CharacterListing[]> {
 
   return [
     {
+      id: '1',
       name: 'Varis Skyshadow',
+    },
+    {
+      id: '2',
+      name: 'Grimm Blackstone',
+    },
+    {
+      id: '3',
+      name: 'Arianna Silverwind',
+    },
+    {
+      id: '4',
+      name: 'Kaelin Swiftfoot',
     },
   ];
 }
