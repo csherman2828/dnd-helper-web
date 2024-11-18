@@ -1,21 +1,8 @@
-import { createRouter, createWebHistory, type RouterOptions } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 
 const DEFAULT_TITLE = 'D&D Helper';
 
-interface CustomRouterOptions extends RouterOptions {
-  routes: {
-    path: string;
-    name: string;
-    component: any;
-    meta?: {
-      title?: string;
-      shouldHideToolbar?: boolean;
-      shouldIgnoreAuth?: boolean;
-    };
-  }[];
-}
-
-const routerOptions: CustomRouterOptions = {
+const routerOptions = {
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
