@@ -1,4 +1,4 @@
-import { type CharacterListing } from './CharacterListing';
+import { type CharacterListing } from '../../types/CharacterListing';
 async function fetchCharacters(userId: string): Promise<CharacterListing[]> {
   console.log(`Fetching character base for user id: ${userId}`);
 

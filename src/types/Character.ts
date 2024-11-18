@@ -1,4 +1,4 @@
-import fetchCharacterBase from './fetchCharacterBase';
+import fetchCharacterBase from '../pages/character/fetchCharacterBase';
 import {
   type CharacterBase,
   Size,

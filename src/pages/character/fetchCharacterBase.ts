@@ -1,4 +1,4 @@
-import { type CharacterBase, Size } from './CharacterBase';
+import { type CharacterBase, Size } from '../../types/CharacterBase';
 
 async function fetchCharacterBase(characterId: string) {
   console.log(`Fetching character base for character ID: ${characterId}`);

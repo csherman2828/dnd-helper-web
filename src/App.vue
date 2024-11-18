@@ -1,30 +1,19 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
+  import { computed } from 'vue';
+  import { useRouter, useRoute } from 'vue-router';
 
+  import { useStore } from '@/stores/auth';
+
+  const store = useStore();
+  const route = useRoute();
   const router = useRouter();
 
-  const ignoreAuth = ref(true);
+  const shouldHideToolbar = computed(() => route.meta.shouldHideToolbar);
 
-  const authenticated = ref(false);
-  const username = ref('');
-  const password = ref('');
-  const formReady = ref(false);
-
-  function login() {
-    console.log({
-      formReady: formReady.value,
-      username: username.value,
-      password: password.value,
-    });
-    authenticated.value = true;
+  async function logout() {
+    await store.logout();
+    router.push({ name: 'login' });
   }
-
-  function logout() {
-    authenticated.value = false;
-  }
-
-  const rules = [(value: string) => !!value || 'Required.'];
 
   function handleSiteNameClicked() {
     router.push({ name: 'home' });
@@ -32,46 +21,8 @@
 </script>
 
 <template>
-  <div
-    class="unauthenticated-view"
-    style="
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
-      justify-content: center;
-    "
-    v-if="!authenticated && !ignoreAuth"
-  >
-    <v-form
-      v-model="formReady"
-      @submit.prevent
-      style="
-        width: 24rem;
-        border: 1px solid gray;
-        padding: 16px;
-        border-radius: 1rem;
-      "
-    >
-      <h1 style="padding-bottom: 16px; width: 100%; text-align: center">
-        Shermaniac VTT
-      </h1>
-      <v-text-field
-        v-model="username"
-        label="Username"
-        :rules="rules"
-        name="username"
-        autocomplete="username"
-      />
-      <v-text-field v-model="password" label="Password" type="password" />
-      <v-btn @click="login" type="submit" :disabled="!formReady" block>
-        Login
-      </v-btn>
-    </v-form>
-  </div>
-  <v-layout class="authenticated-view" v-else>
-    <v-app-bar>
+  <v-layout class="authenticated-view">
+    <v-app-bar v-if="!shouldHideToolbar">
       <v-toolbar-title class="site-name" @click="handleSiteNameClicked">
         Shermaniac VTT
       </v-toolbar-title>

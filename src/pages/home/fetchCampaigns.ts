@@ -1,4 +1,4 @@
-import { type CampaignListing } from './CampaignListing';
+import { type CampaignListing } from '../../types/CampaignListing';
 
 async function fetchCampaigns(userId: string): Promise<CampaignListing[]> {
   console.log(`Fetching character base for user id: ${userId}`);
