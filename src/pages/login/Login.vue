@@ -1,19 +1,43 @@
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
 
-  import { useStore } from '@/stores/auth';
+  import { useAuthStore } from '@/stores/auth';
+  import { sendRequest } from '@/utils/sendRequest';
 
-  const router = useRouter();
-  const store = useStore();
+  const { registerIdToken } = useAuthStore();
 
-  const username = ref('');
-  const password = ref('');
+  const emailInput = ref('');
+  const passwordInput = ref('');
   const formReady = ref(false);
 
   async function login() {
-    await store.login('dummy-id-token', 'dummy-refresh-token', 'dummy-user-id');
-    router.push({ name: 'home' });
+    console.log('Logging in');
+    const url = 'https://cognito-idp.us-east-1.amazonaws.com';
+    try {
+      const response = await sendRequest(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+        },
+        body: JSON.stringify({
+          AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: '61fpd4uj8r0aksrf4j712m6lke',
+          AuthParameters: {
+            USERNAME: emailInput.value,
+            PASSWORD: passwordInput.value,
+          },
+        }),
+      });
+
+      const { AuthenticationResult } = await response.json();
+      const idToken = AuthenticationResult.IdToken;
+
+      registerIdToken(idToken);
+      console.log(`Logged in as ${emailInput.value}`);
+    } catch (err) {
+      console.error('Failed to log in', err);
+    }
   }
 
   const rules = [(value: string) => !!value || 'Required.'];
@@ -24,20 +48,19 @@
     <v-form v-model="formReady" @submit.prevent>
       <h1 style="text-align: center">Shermaniac VTT</h1>
       <v-text-field
-        v-model="username"
-        label="Username"
+        v-model="emailInput"
+        label="Email"
         :rules="rules"
-        name="username"
-        autocomplete="username"
+        name="email"
+        autocomplete="email"
       />
-      <v-text-field v-model="password" label="Password" type="password" />
+      <v-text-field v-model="passwordInput" label="Password" type="password" />
       <v-btn @click="login" type="submit" :disabled="!formReady" block>
         Login
       </v-btn>
-
       <div>
         If you do not have an account yet, please
-        <router-link :to="{ name: 'signup' }">sign up</router-link>
+        <span style="color: rgb(var(--v-theme-primary))">sign up</span>
       </div>
     </v-form>
   </div>

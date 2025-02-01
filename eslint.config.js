@@ -7,13 +7,15 @@ import pluginVue from 'eslint-plugin-vue';
 export default [
   { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
   { ignores: ['node_modules', 'dist'] },
-  { languageOptions: { globals: globals.browser } },
+  { languageOptions: { globals: { ...globals.browser, RequestInit: true } } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/essential'],
   {
     files: ['**/*.vue'],
-    languageOptions: { parserOptions: { parser: tseslint.parser } },
+    languageOptions: {
+      parserOptions: { parser: tseslint.parser },
+    },
   },
   {
     rules: {

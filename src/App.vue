@@ -1,18 +1,23 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
+  import { storeToRefs } from 'pinia';
 
-  import { useStore } from '@/stores/auth';
+  import Login from '@/pages/login/Login.vue';
+  import { useAuthStore } from '@/stores/auth';
 
-  const store = useStore();
+  const authStore = useAuthStore();
+  const { unregisterIdToken } = authStore;
+  const { isAuthenticated } = storeToRefs(authStore);
+
   const route = useRoute();
   const router = useRouter();
 
+  const shouldShowLogin = computed(() => !isAuthenticated.value);
   const shouldHideToolbar = computed(() => route.meta.shouldHideToolbar);
 
-  async function logout() {
-    await store.logout();
-    router.push({ name: 'login' });
+  function logout() {
+    unregisterIdToken();
   }
 
   function handleSiteNameClicked() {
@@ -21,7 +26,8 @@
 </script>
 
 <template>
-  <v-layout class="authenticated-view">
+  <Login v-if="shouldShowLogin" />
+  <v-layout v-else class="authenticated-view">
     <v-app-bar v-if="!shouldHideToolbar">
       <v-toolbar-title class="site-name" @click="handleSiteNameClicked">
         Shermaniac VTT

@@ -1,27 +1,37 @@
 import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { jwtDecode } from 'jwt-decode';
 
-type Token = string | null;
+export const useAuthStore = defineStore('auth', () => {
+  const idToken = ref<string | null>(null);
+  const userId = ref<string | null>(null);
+  const email = ref<string | null>(null);
 
-export const useStore = defineStore({
-  id: 'main',
-  state: () => ({
-    idToken: null as Token,
-    accessToken: null as Token,
-    refreshToken: null as Token,
-  }),
-  getters: {
-    isAuthenticated: state => !!state.idToken,
-  },
-  actions: {
-    login(idToken: string, accessToken: string, refreshToken: string) {
-      this.idToken = idToken;
-      this.accessToken = accessToken;
-      this.refreshToken = refreshToken;
-    },
-    logout() {
-      this.idToken = null;
-      this.accessToken = null;
-      this.refreshToken = null;
-    },
-  },
+  const isAuthenticated = computed(() => !!idToken.value);
+
+  function registerIdToken(newIdToken: string) {
+    const { email: newEmail, sub: newUserId } = jwtDecode(newIdToken) as {
+      email: string;
+      sub: string;
+    };
+
+    idToken.value = newIdToken;
+    userId.value = newUserId;
+    email.value = newEmail;
+  }
+
+  function unregisterIdToken() {
+    idToken.value = null;
+    userId.value = null;
+    email.value = null;
+  }
+
+  return {
+    userId,
+    email,
+    idToken,
+    registerIdToken,
+    unregisterIdToken,
+    isAuthenticated,
+  };
 });

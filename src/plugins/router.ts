@@ -18,26 +18,6 @@ const routerOptions = {
         title: 'Character | TTRPGZ',
       },
     },
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/pages/login/Login.vue'),
-      meta: {
-        shouldHideToolbar: true,
-        shouldIgnoreAuth: true,
-        title: 'Login | TTRPGZ',
-      },
-    },
-    {
-      path: '/signup',
-      name: 'signup',
-      component: () => import('@/pages/signup/Signup.vue'),
-      meta: {
-        shouldHideToolbar: true,
-        shouldIgnoreAuth: true,
-        title: 'Signup | TTRPGZ',
-      },
-    },
   ],
 };
 
