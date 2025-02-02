@@ -7,7 +7,7 @@
   import { useAuthStore } from '@/stores/auth';
 
   const authStore = useAuthStore();
-  const { unregisterIdToken } = authStore;
+  const { logout } = authStore;
   const { isAuthenticated } = storeToRefs(authStore);
 
   const route = useRoute();
@@ -15,10 +15,6 @@
 
   const shouldShowLogin = computed(() => !isAuthenticated.value);
   const shouldHideToolbar = computed(() => route.meta.shouldHideToolbar);
-
-  function logout() {
-    unregisterIdToken();
-  }
 
   function handleSiteNameClicked() {
     router.push({ name: 'home' });

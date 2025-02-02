@@ -1,42 +1,91 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
 
   import { useAuthStore } from '@/stores/auth';
-  import { sendRequest } from '@/utils/sendRequest';
 
-  const { registerIdToken } = useAuthStore();
+  const { login } = useAuthStore();
 
   const emailInput = ref('');
   const passwordInput = ref('');
+  const loginError = ref('');
   const formReady = ref(false);
+  const isAttemptingLogin = ref(false);
 
-  async function login() {
-    console.log('Logging in');
+  const shouldShowError = computed(() => !!loginError.value);
+
+  interface InitiateAuthInput {
+    username: string;
+    password: string;
+  }
+
+  async function initiateAuth(input: InitiateAuthInput) {
+    const { username, password } = input;
+
     const url = 'https://cognito-idp.us-east-1.amazonaws.com';
-    try {
-      const response = await sendRequest(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-amz-json-1.1',
-          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-amz-json-1.1',
+        'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+      },
+      body: JSON.stringify({
+        AuthFlow: 'USER_PASSWORD_AUTH',
+        ClientId: '61fpd4uj8r0aksrf4j712m6lke',
+        AuthParameters: {
+          USERNAME: username,
+          PASSWORD: password,
         },
-        body: JSON.stringify({
-          AuthFlow: 'USER_PASSWORD_AUTH',
-          ClientId: '61fpd4uj8r0aksrf4j712m6lke',
-          AuthParameters: {
-            USERNAME: emailInput.value,
-            PASSWORD: passwordInput.value,
-          },
-        }),
+      }),
+    };
+
+    return fetch(url, options);
+  }
+
+  async function attemptAuthentication() {
+    try {
+      isAttemptingLogin.value = true;
+
+      const response = await initiateAuth({
+        username: emailInput.value,
+        password: passwordInput.value,
       });
 
-      const { AuthenticationResult } = await response.json();
-      const idToken = AuthenticationResult.IdToken;
+      const responseJson = await response.json();
 
-      registerIdToken(idToken);
-      console.log(`Logged in as ${emailInput.value}`);
+      if (!response.ok) {
+        const { status, statusText } = response;
+        const { __type: type, message } = responseJson;
+
+        console.error('Failed to log in', {
+          status,
+          statusText,
+          type,
+          message,
+        });
+
+        if (type === 'NotAuthorizedException') {
+          loginError.value = 'Incorrect username or password';
+        } else {
+          loginError.value = 'An unknown error occurred';
+        }
+
+        return;
+      }
+
+      loginError.value = '';
+
+      const { AuthenticationResult } = responseJson;
+      const {
+        AccessToken: accessToken,
+        IdToken: idToken,
+        RefreshToken: refreshToken,
+      } = AuthenticationResult;
+
+      login({ accessToken, idToken, refreshToken });
     } catch (err) {
       console.error('Failed to log in', err);
+    } finally {
+      isAttemptingLogin.value = false;
     }
   }
 
@@ -47,15 +96,38 @@
   <div class="auth">
     <v-form v-model="formReady" @submit.prevent>
       <h1 style="text-align: center">Shermaniac VTT</h1>
+      <v-alert
+        color="error"
+        icon="mdi-alert"
+        closable
+        @click:close="loginError = ''"
+        v-model="shouldShowError"
+      >
+        {{ loginError }}
+      </v-alert>
       <v-text-field
         v-model="emailInput"
         label="Email"
         :rules="rules"
         name="email"
         autocomplete="email"
+        :disabled="isAttemptingLogin"
+        :loading="isAttemptingLogin"
       />
-      <v-text-field v-model="passwordInput" label="Password" type="password" />
-      <v-btn @click="login" type="submit" :disabled="!formReady" block>
+      <v-text-field
+        v-model="passwordInput"
+        label="Password"
+        type="password"
+        :disabled="isAttemptingLogin"
+        :loading="isAttemptingLogin"
+      />
+      <v-btn
+        @click="attemptAuthentication"
+        type="submit"
+        :disabled="!formReady || isAttemptingLogin"
+        block
+        :loading="isAttemptingLogin"
+      >
         Login
       </v-btn>
       <div>
