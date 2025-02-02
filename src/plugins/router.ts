@@ -8,12 +8,12 @@ const routerOptions = {
     {
       path: '/',
       name: 'home',
-      component: import('@/pages/home/Home.vue'),
+      component: () => import('@/pages/home/Home.vue'),
     },
     {
       path: '/character/:id',
       name: 'character',
-      component: import('@/pages/character/Character.vue'),
+      component: () => import('@/pages/character/Character.vue'),
       meta: {
         title: 'Character | TTRPGZ',
       },
