@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { jwtDecode } from 'jwt-decode';
+import { refreshAuth } from '@/utils/cognito';
 
 function useLocalStorage<T>(key: string, defaultValue: T) {
   const storedValue = localStorage.getItem(key);
@@ -27,6 +28,7 @@ interface LoginInput {
   accessToken: string;
   idToken: string;
   refreshToken: string;
+  expirationTime: number;
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -40,6 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = useLocalStorage('accessToken', '');
   const idToken = useLocalStorage('idToken', '');
   const refreshToken = useLocalStorage('refreshToken', '');
+  const expirationTime = useLocalStorage('expiresIn', 0);
 
   const decodedIdToken = computed(
     () => jwtDecode(idToken.value) as { email: string; sub: string },
@@ -54,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = input.accessToken;
     idToken.value = input.idToken;
     refreshToken.value = input.refreshToken;
+    expirationTime.value = input.expirationTime;
   }
 
   function logout() {
@@ -62,12 +66,37 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = '';
   }
 
+  async function refreshSession() {
+    const preAuthTime = Date.now();
+    try {
+      const response = await refreshAuth(refreshToken.value);
+      const responseBody = await response.json();
+
+      accessToken.value = responseBody.AuthenticationResult.AccessToken;
+      idToken.value = responseBody.AuthenticationResult.IdToken;
+      expirationTime.value =
+        preAuthTime + responseBody.AuthenticationResult.ExpiresIn;
+    } catch (e) {
+      console.error('Failed to refresh session', e);
+      logout();
+    }
+  }
+
+  async function getAccessToken() {
+    if (Date.now() >= expirationTime.value) {
+      await refreshSession();
+    }
+    await nextTick();
+    return accessToken.value;
+  }
+
   return {
     userId,
     email,
     idToken,
     login,
     logout,
+    getAccessToken,
     isAuthenticated,
   };
 });

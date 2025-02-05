@@ -3,6 +3,8 @@
 
   import { useAuthStore } from '@/stores/auth';
 
+  import { initiateAuth } from '@/utils/cognito';
+
   const { login } = useAuthStore();
 
   const emailInput = ref('');
@@ -13,42 +15,16 @@
 
   const shouldShowError = computed(() => !!loginError.value);
 
-  interface InitiateAuthInput {
-    username: string;
-    password: string;
-  }
-
-  async function initiateAuth(input: InitiateAuthInput) {
-    const { username, password } = input;
-
-    const url = 'https://cognito-idp.us-east-1.amazonaws.com';
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-amz-json-1.1',
-        'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
-      },
-      body: JSON.stringify({
-        AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: '61fpd4uj8r0aksrf4j712m6lke',
-        AuthParameters: {
-          USERNAME: username,
-          PASSWORD: password,
-        },
-      }),
-    };
-
-    return fetch(url, options);
-  }
-
   async function attemptAuthentication() {
     try {
       isAttemptingLogin.value = true;
 
-      const response = await initiateAuth({
-        username: emailInput.value,
-        password: passwordInput.value,
-      });
+      const preAuthTime = Date.now();
+
+      const response = await initiateAuth(
+        emailInput.value,
+        passwordInput.value,
+      );
 
       const responseJson = await response.json();
 
@@ -79,9 +55,17 @@
         AccessToken: accessToken,
         IdToken: idToken,
         RefreshToken: refreshToken,
-      } = AuthenticationResult;
+        ExpiresIn: expiresIn,
+      } = AuthenticationResult as {
+        AccessToken: string;
+        IdToken: string;
+        RefreshToken: string;
+        ExpiresIn: number;
+      };
 
-      login({ accessToken, idToken, refreshToken });
+      const expirationTime = preAuthTime + expiresIn * 1000;
+
+      login({ accessToken, idToken, refreshToken, expirationTime });
     } catch (err) {
       console.error('Failed to log in', err);
     } finally {
