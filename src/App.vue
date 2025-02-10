@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, onBeforeMount } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
   import { storeToRefs } from 'pinia';
 
@@ -7,7 +7,7 @@
   import { useAuthStore } from '@/stores/auth';
 
   const authStore = useAuthStore();
-  const { logout } = authStore;
+  const { logout, refreshSession } = authStore;
   const { isAuthenticated } = storeToRefs(authStore);
 
   const route = useRoute();
@@ -19,6 +19,10 @@
   function handleSiteNameClicked() {
     router.push({ name: 'home' });
   }
+
+  onBeforeMount(async () => {
+    await refreshSession();
+  });
 </script>
 
 <template>
@@ -26,7 +30,7 @@
   <v-layout v-else class="authenticated-view">
     <v-app-bar v-if="!shouldHideToolbar">
       <v-toolbar-title class="site-name" @click="handleSiteNameClicked">
-        Shermaniac VTT
+        D&D Helper
       </v-toolbar-title>
       <v-btn @click="logout">Logout</v-btn>
     </v-app-bar>

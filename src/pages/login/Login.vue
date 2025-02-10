@@ -63,9 +63,58 @@
         ExpiresIn: number;
       };
 
-      const expirationTime = preAuthTime + expiresIn * 1000;
+      const expiresAt = preAuthTime + expiresIn * 1000;
 
-      login({ accessToken, idToken, refreshToken, expirationTime });
+      try {
+        const options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': accessToken,
+          },
+          body: JSON.stringify({
+            refreshToken,
+          }),
+          credentials: 'include',
+        };
+
+        console.log('options', options);
+        const apiTokensResponse = await fetch('http://localhost:3001/tokens', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': accessToken,
+          },
+          body: JSON.stringify({
+            refreshToken,
+          }),
+          credentials: 'include',
+        });
+
+        console.log('apiTokensResponse', apiTokensResponse);
+
+        const apiTokensResponseJson = await apiTokensResponse.json();
+
+        console.log('apiTokensResponseJson', apiTokensResponseJson);
+
+        if (!apiTokensResponse.ok) {
+          const { status, statusText } = apiTokensResponse;
+          const { __type: type, message } = await apiTokensResponse.json();
+
+          console.error('Failed to set refresh token', {
+            status,
+            statusText,
+            type,
+            message,
+          });
+
+          throw new Error('Failed to set refresh token');
+        }
+
+        await login({ accessToken, idToken, expiresAt });
+      } catch (err) {
+        console.error('Failed to set refresh token', err);
+      }
     } catch (err) {
       console.error('Failed to log in', err);
     } finally {

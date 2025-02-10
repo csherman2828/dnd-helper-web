@@ -1,5 +1,5 @@
 const COGNITO_URL = 'https://cognito-idp.us-east-1.amazonaws.com';
-const CLIENT_ID = '6pgtorp3ov46ltjlodi1q0e216';
+const CLIENT_ID = 'gvlfdn5tog93s9n14qp6ijlgd';
 
 enum CognitoMethod {
   InitiateAuth = 'InitiateAuth',

@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch, nextTick } from 'vue';
 import { jwtDecode } from 'jwt-decode';
-import { refreshAuth } from '@/utils/cognito';
 
-function useLocalStorage<T>(key: string, defaultValue: T) {
-  const storedValue = localStorage.getItem(key);
+const apiUri = 'http://localhost:3001';
+
+function useSessionStorage<T>(key: string, defaultValue: T) {
+  const storedValue = sessionStorage.getItem(key);
   const data = ref<T>(
     storedValue ? (JSON.parse(storedValue) as T) : defaultValue,
   );
@@ -13,10 +14,10 @@ function useLocalStorage<T>(key: string, defaultValue: T) {
     data,
     newValue => {
       if (newValue === null || newValue === undefined || newValue === '') {
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
         return;
       }
-      localStorage.setItem(key, JSON.stringify(newValue));
+      sessionStorage.setItem(key, JSON.stringify(newValue));
     },
     { deep: true },
   );
@@ -27,8 +28,7 @@ function useLocalStorage<T>(key: string, defaultValue: T) {
 interface LoginInput {
   accessToken: string;
   idToken: string;
-  refreshToken: string;
-  expirationTime: number;
+  expiresAt: number;
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -39,10 +39,9 @@ export const useAuthStore = defineStore('auth', () => {
   // - we should be setting secure, httpOnly, strict same-site cookies from the
   //   backend
   // - however, for the sake of simplicity, we're storing tokens in localStorage
-  const accessToken = useLocalStorage('accessToken', '');
-  const idToken = useLocalStorage('idToken', '');
-  const refreshToken = useLocalStorage('refreshToken', '');
-  const expirationTime = useLocalStorage('expiresIn', 0);
+  const accessToken = useSessionStorage('accessToken', '');
+  const idToken = useSessionStorage('idToken', '');
+  const expiresAt = useSessionStorage('expiresAt', Date.now());
 
   const decodedIdToken = computed(
     () => jwtDecode(idToken.value) as { email: string; sub: string },
@@ -53,37 +52,68 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!idToken.value);
 
-  function login(input: LoginInput) {
+  async function login(input: LoginInput) {
     accessToken.value = input.accessToken;
     idToken.value = input.idToken;
-    refreshToken.value = input.refreshToken;
-    expirationTime.value = input.expirationTime;
+    expiresAt.value = input.expiresAt;
   }
 
   function logout() {
     accessToken.value = '';
     idToken.value = '';
-    refreshToken.value = '';
   }
 
   async function refreshSession() {
+    console.log('Attempting to refresh session from session storage...');
     const preAuthTime = Date.now();
-    try {
-      const response = await refreshAuth(refreshToken.value);
-      const responseBody = await response.json();
-
-      accessToken.value = responseBody.AuthenticationResult.AccessToken;
-      idToken.value = responseBody.AuthenticationResult.IdToken;
-      expirationTime.value =
-        preAuthTime + responseBody.AuthenticationResult.ExpiresIn;
-    } catch (e) {
-      console.error('Failed to refresh session', e);
-      logout();
+    if (accessToken.value && idToken.value && expiresAt.value > preAuthTime) {
+      console.log('Session refreshed from session storage');
+      return;
     }
+    console.log('Failed to refresh session from session storage');
+
+    console.log('Attempting to refresh session from API...');
+
+    let response;
+    let responseJson;
+    try {
+      response = await fetch(`${apiUri}/tokens`, { credentials: 'include' });
+      responseJson = await response.json();
+      console.log('GET /tokens response', { response, responseJson });
+    } catch (error) {
+      console.error('Failed fetch call when refreshing session', error);
+      console.log('Unable to refresh session from API');
+      return;
+    }
+
+    if (!response.ok) {
+      console.log('Failed to refresh session from API', {
+        response,
+        responseJson,
+      });
+      console.log('Unable to refresh session from API');
+      return;
+    }
+
+    if (
+      responseJson.AccessToken &&
+      responseJson.IdToken &&
+      responseJson.ExpiresIn
+    ) {
+      login({
+        accessToken: responseJson.AccessToken,
+        idToken: responseJson.IdToken,
+        expiresAt: preAuthTime + responseJson.ExpiresIn * 1000,
+      });
+    }
+
+    console.log('Session refreshed from API');
+
+    return;
   }
 
   async function getAccessToken() {
-    if (Date.now() >= expirationTime.value) {
+    if (Date.now() >= expiresAt.value) {
       await refreshSession();
     }
     await nextTick();
@@ -96,6 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     idToken,
     login,
     logout,
+    refreshSession,
     getAccessToken,
     isAuthenticated,
   };
