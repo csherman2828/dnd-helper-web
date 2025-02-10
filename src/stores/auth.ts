@@ -64,22 +64,17 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function refreshSession() {
-    console.log('Attempting to refresh session from session storage...');
     const preAuthTime = Date.now();
     if (accessToken.value && idToken.value && expiresAt.value > preAuthTime) {
       console.log('Session refreshed from session storage');
       return;
     }
-    console.log('Failed to refresh session from session storage');
-
-    console.log('Attempting to refresh session from API...');
 
     let response;
     let responseJson;
     try {
       response = await fetch(`${apiUri}/tokens`, { credentials: 'include' });
       responseJson = await response.json();
-      console.log('GET /tokens response', { response, responseJson });
     } catch (error) {
       console.error('Failed fetch call when refreshing session', error);
       console.log('Unable to refresh session from API');

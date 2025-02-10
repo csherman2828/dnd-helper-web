@@ -24,7 +24,6 @@ const routerOptions = {
 const router = createRouter(routerOptions);
 
 router.beforeEach((to, from, next) => {
-  console.log('Global before each', { to, from });
   document.title = (to.meta.title as string) || DEFAULT_TITLE;
   next();
 });

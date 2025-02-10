@@ -2,9 +2,9 @@
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
 
-  import { useStore } from '@/stores/auth';
+  // import { useAuthStore } from '@/stores/auth';
 
-  const store = useStore();
+  // const store = useAuthStore();
   const router = useRouter();
 
   const displayName = ref('');
@@ -14,13 +14,7 @@
   const formReady = ref(false);
 
   async function signUp() {
-    console.log({
-      displayName: displayName.value,
-      email: email.value,
-      password: password.value,
-      confirmPassword: confirmPassword.value,
-    });
-    await store.login('dummy-id-token', 'dummy-refresh-token', 'dummy-user-id');
+    // await store.login('dummy-id-token', 'dummy-refresh-token', 'dummy-user-id');
     router.push({ name: 'home' });
   }
 

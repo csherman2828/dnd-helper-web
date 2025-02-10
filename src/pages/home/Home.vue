@@ -2,8 +2,8 @@
   import { onMounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
 
-  import { type CharacterListing } from './CharacterListing';
-  import { type CampaignListing } from './CampaignListing';
+  import { type CharacterListing } from '../../types/CharacterListing';
+  import { type CampaignListing } from '../../types/CampaignListing';
   import fetchCharacters from './fetchCharacters';
   import fetchCampaigns from './fetchCampaigns';
 
@@ -18,7 +18,6 @@
   const campaignHeaders = ref([{ title: 'Name', value: 'name' }]);
 
   function handleCharacterRowClick(character: CharacterListing) {
-    console.log(character);
     router.push({ name: 'character', params: { id: character.id } });
   }
 

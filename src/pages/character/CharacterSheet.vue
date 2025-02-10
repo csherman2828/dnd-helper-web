@@ -3,7 +3,11 @@
   import CharacterSheetPage from './CharacterSheetPage.vue';
   import CharacterSheetColumn from './CharacterSheetColumn.vue';
   import CharacterSheetSection from './CharacterSheetSection.vue';
-  import { Character, type AbilityLabel, type SkillLabel } from '../Character';
+  import {
+    Character,
+    type AbilityLabel,
+    type SkillLabel,
+  } from '../../types/Character';
 
   const { character: characterProp } = defineProps({
     character: {
@@ -46,7 +50,6 @@
       return character.value.hasInspiration();
     },
     set(newValue: boolean) {
-      console.log({ newValue });
       if (newValue) {
         character.value.inspire();
       } else {

@@ -66,19 +66,6 @@
       const expiresAt = preAuthTime + expiresIn * 1000;
 
       try {
-        const options = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-token': accessToken,
-          },
-          body: JSON.stringify({
-            refreshToken,
-          }),
-          credentials: 'include',
-        };
-
-        console.log('options', options);
         const apiTokensResponse = await fetch('http://localhost:3001/tokens', {
           method: 'POST',
           headers: {
@@ -91,15 +78,11 @@
           credentials: 'include',
         });
 
-        console.log('apiTokensResponse', apiTokensResponse);
-
         const apiTokensResponseJson = await apiTokensResponse.json();
-
-        console.log('apiTokensResponseJson', apiTokensResponseJson);
 
         if (!apiTokensResponse.ok) {
           const { status, statusText } = apiTokensResponse;
-          const { __type: type, message } = await apiTokensResponse.json();
+          const { __type: type, message } = await apiTokensResponseJson;
 
           console.error('Failed to set refresh token', {
             status,
