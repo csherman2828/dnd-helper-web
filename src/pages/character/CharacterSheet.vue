@@ -191,7 +191,7 @@
                   <div>Inspiration</div>
                   <v-checkbox
                     :value="hasInspiration"
-                    @input="hasInspiration = !hasInspiration"
+                    @input="hasInspiration.set(!hasInspiration.get())"
                     hide-details
                     hide-spin-buttons
                     density="compact"
