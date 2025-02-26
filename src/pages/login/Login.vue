@@ -3,12 +3,12 @@
 
   import { useAuthStore } from '@/stores/auth';
 
-  import { initiateAuth } from '@/utils/cognito';
+  const API_URL = import.meta.env.VITE_DND_HELPER_API_URL;
 
   const { login } = useAuthStore();
 
-  const emailInput = ref('');
-  const passwordInput = ref('');
+  const emailInput = ref('csherman2828@gmail.com');
+  const passwordInput = ref('TestPassword2!');
   const loginError = ref('');
   const formReady = ref(false);
   const isAttemptingLogin = ref(false);
@@ -21,85 +21,50 @@
 
       const preAuthTime = Date.now();
 
-      const response = await initiateAuth(
-        emailInput.value,
-        passwordInput.value,
-      );
-
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: emailInput.value,
+          password: passwordInput.value,
+        }),
+        credentials: 'include',
+      });
       const responseJson = await response.json();
 
       if (!response.ok) {
         const { status, statusText } = response;
-        const { __type: type, message } = responseJson;
-
         console.error('Failed to log in', {
           status,
           statusText,
-          type,
-          message,
+          responseJson,
         });
-
-        if (type === 'NotAuthorizedException') {
-          loginError.value = 'Incorrect username or password';
-        } else {
-          loginError.value = 'An unknown error occurred';
-        }
 
         return;
       }
 
-      loginError.value = '';
+      if (
+        responseJson.accessToken &&
+        responseJson.idToken &&
+        responseJson.expiresIn
+      ) {
+        const { accessToken, idToken, expiresIn } = responseJson;
+        const expiresAt = preAuthTime + expiresIn * 1000;
 
-      const { AuthenticationResult } = responseJson;
-      const {
-        AccessToken: accessToken,
-        IdToken: idToken,
-        RefreshToken: refreshToken,
-        ExpiresIn: expiresIn,
-      } = AuthenticationResult as {
-        AccessToken: string;
-        IdToken: string;
-        RefreshToken: string;
-        ExpiresIn: number;
-      };
-
-      const expiresAt = preAuthTime + expiresIn * 1000;
-
-      try {
-        const apiTokensResponse = await fetch('http://localhost:3001/tokens', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-token': accessToken,
-          },
-          body: JSON.stringify({
-            refreshToken,
-          }),
-          credentials: 'include',
-        });
-
-        const apiTokensResponseJson = await apiTokensResponse.json();
-
-        if (!apiTokensResponse.ok) {
-          const { status, statusText } = apiTokensResponse;
-          const { __type: type, message } = await apiTokensResponseJson;
-
-          console.error('Failed to set refresh token', {
-            status,
-            statusText,
-            type,
-            message,
-          });
-
-          throw new Error('Failed to set refresh token');
-        }
+        loginError.value = '';
 
         await login({ accessToken, idToken, expiresAt });
-      } catch (err) {
-        console.error('Failed to set refresh token', err);
+        return;
       }
+
+      console.error('Unhandled login response', { response, responseJson });
+      loginError.value = 'Unexpected response from server';
+      return;
     } catch (err) {
-      console.error('Failed to log in', err);
+      console.error('Unexpected error when logging in', err);
+      loginError.value = 'Unexpected error when logging in';
     } finally {
       isAttemptingLogin.value = false;
     }

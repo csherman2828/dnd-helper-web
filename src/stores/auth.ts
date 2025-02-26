@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed, watch, nextTick } from 'vue';
 import { jwtDecode } from 'jwt-decode';
 
-const apiUri = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_DND_HELPER_API_URL;
 
 function useSessionStorage<T>(key: string, defaultValue: T) {
   const storedValue = sessionStorage.getItem(key);
@@ -32,23 +32,18 @@ interface LoginInput {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  // TODO: implement secure, httpOnly, strict same-site cookies
-  // - this is typically BAD SECURITY PRACTICE
-  // - storing tokens, especially refresh tokens, in localStorage leaves us
-  //   vulnerable to XSS and XSRF attacks
-  // - we should be setting secure, httpOnly, strict same-site cookies from the
-  //   backend
-  // - however, for the sake of simplicity, we're storing tokens in localStorage
-  const accessToken = useSessionStorage('accessToken', '');
-  const idToken = useSessionStorage('idToken', '');
-  const expiresAt = useSessionStorage('expiresAt', Date.now());
+  const accessToken = useSessionStorage<string | null>('accessToken', null);
+  const idToken = useSessionStorage<string | null>('idToken', null);
+  const expiresAt = useSessionStorage<number | null>('expiresAt', null);
 
-  const decodedIdToken = computed(
-    () => jwtDecode(idToken.value) as { email: string; sub: string },
+  const decodedIdToken = computed(() =>
+    idToken.value
+      ? (jwtDecode(idToken.value) as { email: string; sub: string })
+      : null,
   );
 
-  const userId = computed(() => decodedIdToken.value.sub);
-  const email = computed(() => decodedIdToken.value.email);
+  const userId = computed(() => decodedIdToken.value?.sub);
+  const email = computed(() => decodedIdToken.value?.email);
 
   const isAuthenticated = computed(() => !!idToken.value);
 
@@ -58,14 +53,35 @@ export const useAuthStore = defineStore('auth', () => {
     expiresAt.value = input.expiresAt;
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      const response = await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      const responseJson = await response.json();
+      console.log('Logout response', {
+        response,
+        responseJson,
+      });
+    } catch (error) {
+      console.warn('Encountered api error when logging out', error);
+    }
     accessToken.value = '';
     idToken.value = '';
+    expiresAt.value = null;
   }
 
   async function refreshSession() {
     const preAuthTime = Date.now();
-    if (accessToken.value && idToken.value && expiresAt.value > preAuthTime) {
+    if (
+      accessToken.value &&
+      idToken.value &&
+      (expiresAt.value ?? 0) > preAuthTime
+    ) {
       console.log('Session refreshed from session storage');
       return;
     }
@@ -73,7 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
     let response;
     let responseJson;
     try {
-      response = await fetch(`${apiUri}/tokens`, { credentials: 'include' });
+      response = await fetch(`${API_URL}/tokens`, { credentials: 'include' });
       responseJson = await response.json();
     } catch (error) {
       console.error('Failed fetch call when refreshing session', error);
@@ -108,7 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function getAccessToken() {
-    if (Date.now() >= expiresAt.value) {
+    if (Date.now() >= (expiresAt.value ?? 0)) {
       await refreshSession();
     }
     await nextTick();

@@ -7,7 +7,6 @@
   import { useAuthStore } from '@/stores/auth';
 
   const authStore = useAuthStore();
-  const { logout, refreshSession } = authStore;
   const { isAuthenticated } = storeToRefs(authStore);
 
   const route = useRoute();
@@ -20,8 +19,16 @@
     router.push({ name: 'home' });
   }
 
+  async function logout() {
+    try {
+      await authStore.logout();
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  }
+
   onBeforeMount(async () => {
-    await refreshSession();
+    await authStore.refreshSession();
   });
 </script>
 
