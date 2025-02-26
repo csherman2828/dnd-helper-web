@@ -7,8 +7,8 @@
 
   const { login } = useAuthStore();
 
-  const emailInput = ref('csherman2828@gmail.com');
-  const passwordInput = ref('TestPassword2!');
+  const emailInput = ref('');
+  const passwordInput = ref('');
   const loginError = ref('');
   const formReady = ref(false);
   const isAttemptingLogin = ref(false);
