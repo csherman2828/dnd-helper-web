@@ -89,7 +89,9 @@ export const useAuthStore = defineStore('auth', () => {
     let response;
     let responseJson;
     try {
-      response = await fetch(`${API_URL}/tokens`, { credentials: 'include' });
+      response = await fetch(`${API_URL}/auth/refresh`, {
+        credentials: 'include',
+      });
       responseJson = await response.json();
     } catch (error) {
       console.error('Failed fetch call when refreshing session', error);
@@ -107,14 +109,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (
-      responseJson.AccessToken &&
-      responseJson.IdToken &&
-      responseJson.ExpiresIn
+      responseJson.accessToken &&
+      responseJson.idToken &&
+      responseJson.expiresIn
     ) {
       login({
-        accessToken: responseJson.AccessToken,
-        idToken: responseJson.IdToken,
-        expiresAt: preAuthTime + responseJson.ExpiresIn * 1000,
+        accessToken: responseJson.accessToken,
+        idToken: responseJson.idToken,
+        expiresAt: preAuthTime + responseJson.expiresIn * 1000,
       });
     }
 
