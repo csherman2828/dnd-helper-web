@@ -12,8 +12,8 @@
 
   const { login } = useAuthStore();
 
-  const emailInput = ref('csherman2828@gmail.com');
-  const passwordInput = ref('Testp1!');
+  const emailInput = ref('');
+  const passwordInput = ref('');
   const loginError = ref('');
   const formReady = ref(false);
   const isAttemptingLogin = ref(false);
@@ -22,8 +22,8 @@
   const updatePasswordSession = ref('');
   const isUpdatePasswordFormReady = ref(false);
   const isUpdatingPassword = ref(false);
-  const newPasswordInput = ref('Testp1!');
-  const confirmNewPasswordInput = ref('Testp1!');
+  const newPasswordInput = ref('');
+  const confirmNewPasswordInput = ref('');
   const updatePasswordError = ref('');
 
   const shouldShowError = computed(() => !!loginError.value);
@@ -162,7 +162,7 @@
       v-model="formReady"
       @submit.prevent
     >
-      <h2>Login</h2>
+      <h2>Log In</h2>
       <v-alert
         color="error"
         icon="mdi-alert"
